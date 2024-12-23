@@ -135,14 +135,18 @@ export function rgbToHex(rgb) {
     return '0x' + decToHex(rgb[0]) + decToHex(rgb[1]) + decToHex(rgb[2]);
 }
 
+export function rgbToInteger(rgb) {
+    return rgb[0] * 65536 + rgb[1] * 256 + rgb[2];
+}
+
 /*
  * colorMatrix
  * @param {[[]]} matrix matrix of values
  * @param {Object} scheme {bins: string, colors}
  */
-export function colorMatrix(matrix, scheme, colorFilter, rows, cols) {
+export function colorMatrix(matrix, scheme, colorFilter, rows, cols, maxValue) {
     if (scheme == 'gradient') {
-        return matGradient(matrix, [255, 0, 0], [255, 255, 255], colorFilter, rows, cols);
+        return matGradient(matrix, [0, 64, 128], [255, 255, 255], colorFilter, rows, cols, maxValue);
     }
 
     let {bins, colors} = scheme;
@@ -247,17 +251,22 @@ function pickHex(color1, color2, weight) {
  * @param {*} rgb2 [r, g, b]
  * @param {*} colorFilter function that returns color to override default
  */
-function matGradient(matrix, rgb1, rgb2, colorFilter = null, rows, cols) {
-    const max = matMinMax(matrix).max,
-        m = matrix.length,
-        n = matrix[0].length;
+function matGradient(matrix, rgb1, rgb2, colorFilter = null, rows, cols, maxValue) {
+    // const max = matMinMax(matrix).max,
+    //     m = matrix.length,
+    //     n = matrix[0].length;
+    const max = maxValue;
+    const m = rows.length,
+        n = cols.length;
 
     const cMatrix = [];
     for (let i = 0; i < m; i++) {
         const row = [];
         for (let j = 0; j < n; j++) {
             const val = matrix[i][j];
-            let color = rgbToHex(pickHex(rgb1, rgb2, val / max));
+
+            let color = rgbToInteger(pickHex(rgb1, rgb2, val / max));
+            // let color = rgbToHex(pickHex(rgb1, rgb2, val / max));
 
             // apply any color overrides
             if (colorFilter) {
@@ -267,7 +276,7 @@ function matGradient(matrix, rgb1, rgb2, colorFilter = null, rows, cols) {
                 color = typeof newColor !== 'undefined' ? newColor : color;
             }
 
-            row.push(parseInt(color));
+            row.push(color);
         }
 
         cMatrix.push(row);

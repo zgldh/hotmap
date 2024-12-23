@@ -46,8 +46,8 @@ export default class ScrollBox {
         }
 
         container.style.position = 'absolute';
-        container.style.top = `${this.y}px`;
-        container.style.left = `${this.x}px`;
+        // container.style.top = `${this.y}px`;
+        // container.style.left = `${this.x}px`;
         container.style.width = `${this.width}px`;
         container.style.height = `${this.height}px`;
         this.scrollContainer = container;
