@@ -5,7 +5,7 @@
 
 A WebGL Heatmap Viewer for Bioinformatics and Big Data, written in vanilla JS and built with [pixi.js](http://www.pixijs.com/).
 
-[demo](https://nconrad.github.io/hotmap/demo/)
+[demo](https://zgldh.github.io/heatmap/index.html)
 
 
 ## Some Features
