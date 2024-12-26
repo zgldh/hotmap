@@ -62,44 +62,48 @@
       let previousData = [];
       var totalFrames = 100;
       let valueMax = 100;
-      let neighborSize = 2;
+      let neighborSize = 5;
 
       console.log('Generating data...')
       for (var i = 0; i < totalFrames; i++) {
-        dataCache.push(generateData())
+        dataCache.push(generateData(i))
       }
       console.log('All data generated.')
 
-      // Generate data points for the entire 208x256 grid
-      function generateData() {
+      // Generate data points with two expanding circles
+      function generateData(iteration) {
         const data = [];
+        
+        // Define two center points
+        const center1 = {x: height * 0.3, y: width * 0.3};
+        const center2 = {x: height * 0.7, y: width * 0.7};
+        
+        // Calculate current radius and value based on iteration
+        const maxRadius = 80;
+        const minRadius = 20;
+        const radius = Math.min(minRadius + iteration * 0.6, maxRadius);
+        const value = Math.min(iteration, 100);
 
         for (let x = 0; x < height; x++) {
           let rowData = [];
           for (let y = 0; y < width; y++) {
-            let neighborSum = 0;
-            let neighborCount = 0;
-
-            // Check neighbors
-            for (let dx = -neighborSize; dx <= neighborSize; dx++) {
-              for (let dy = -neighborSize; dy <= neighborSize; dy++) {
-                if (dx === 0 && dy === 0) continue; // Skip current cell
-                const nx = x + dx;
-                const ny = y + dy;
-                if (nx >= 0 && nx < height && ny >= 0 && ny < width && previousData.hasOwnProperty(nx) && previousData[nx].hasOwnProperty(ny)) {
-                  neighborSum += previousData[nx][ny];
-                  neighborCount++;
-                }
-              }
+            // Calculate distance to both centers
+            const dist1 = Math.sqrt(Math.pow(x - center1.x, 2) + Math.pow(y - center1.y, 2));
+            const dist2 = Math.sqrt(Math.pow(x - center2.x, 2) + Math.pow(y - center2.y, 2));
+            
+            // Calculate value based on distance to centers
+            let cellValue = 0;
+            if (dist1 <= radius) {
+              cellValue = Math.max(cellValue, value * (1 - dist1/radius));
             }
-
-            let baseValue = neighborCount > 0 ? neighborSum / neighborCount : Math.random() * valueMax;
-            const value = Math.min(valueMax, Math.max(0, baseValue + (Math.random() - 0.5) * valueMax * 0.2)); // Adjust value with a smaller random factor
-            rowData.push(value);
+            if (dist2 <= radius) {
+              cellValue = Math.max(cellValue, value * (1 - dist2/radius));
+            }
+            
+            rowData.push(cellValue);
           }
           data.push(rowData);
         }
-        previousData = data; // Update previousData for the next frame
         return data;
       }
 
@@ -125,7 +129,7 @@
         ele,
         rows,
         cols,
-        matrix: dataCache[0],
+        matrix: dataCache[99],
         defaults: {
           cellWidth: scale,
           cellHeight: scale,
@@ -145,7 +149,7 @@
           [0, 0, 255],
           [0, 255, 0],
           [255, 255, 0],
-          [255, 0, 0],
+          [255, 0, 0]
         ],
         options: {
           hideLegend: true,
@@ -176,7 +180,7 @@
         intervalHandle = setInterval(() => {
           var matrix = dataCache[frame];
           hotmap.updateMatrix(matrix);
-          // console.log('took ', (+new Date) - init, 'ms', 'frame', frame);
+          console.log('took ', (+new Date) - init, 'ms', 'frame', frame);
           init = +new Date;
           frame = (frame + 1) % dataCache.length;
         }, 1000 / currentFps);

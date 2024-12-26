@@ -7,136 +7,135 @@
 import { matMinMax } from './utils';
 
 const schemeCategory20RGBs = [
-    'rgb(31, 119, 180)',
-    'rgb(174, 199, 232)',
-    'rgb(255, 127, 14)',
-    'rgb(255, 187, 120)',
-    'rgb(44, 160, 44)',
-    'rgb(152, 223, 138)',
-    'rgb(214, 39, 40)',
-    'rgb(255, 152, 150)',
-    'rgb(148, 103, 189)',
-    'rgb(197, 176, 213)',
-    'rgb(140, 86, 75)',
-    'rgb(196, 156, 148)',
-    'rgb(227, 119, 194)',
-    'rgb(247, 182, 210)',
-    'rgb(127, 127, 127)',
-    'rgb(199, 199, 199)',
-    'rgb(188, 189, 34)',
-    'rgb(219, 219, 141)',
-    'rgb(23, 190, 207)',
-    'rgb(158, 218, 229)'
+  'rgb(31, 119, 180)',
+  'rgb(174, 199, 232)',
+  'rgb(255, 127, 14)',
+  'rgb(255, 187, 120)',
+  'rgb(44, 160, 44)',
+  'rgb(152, 223, 138)',
+  'rgb(214, 39, 40)',
+  'rgb(255, 152, 150)',
+  'rgb(148, 103, 189)',
+  'rgb(197, 176, 213)',
+  'rgb(140, 86, 75)',
+  'rgb(196, 156, 148)',
+  'rgb(227, 119, 194)',
+  'rgb(247, 182, 210)',
+  'rgb(127, 127, 127)',
+  'rgb(199, 199, 199)',
+  'rgb(188, 189, 34)',
+  'rgb(219, 219, 141)',
+  'rgb(23, 190, 207)',
+  'rgb(158, 218, 229)',
 ];
 
 const schemeCategory20Hex = [
-    '#1f77b4',
-    '#aec7e8',
-    '#ff7f0e',
-    '#ffbb78',
-    '#2ca02c',
-    '#98df8a',
-    '#d62728',
-    '#ff9896',
-    '#9467bd',
-    '#c5b0d5',
-    '#8c564b',
-    '#c49c94',
-    '#e377c2',
-    '#f7b6d2',
-    '#7f7f7f',
-    '#c7c7c7',
-    '#bcbd22',
-    '#dbdb8d',
-    '#17becf',
-    '#9edae5'
+  '#1f77b4',
+  '#aec7e8',
+  '#ff7f0e',
+  '#ffbb78',
+  '#2ca02c',
+  '#98df8a',
+  '#d62728',
+  '#ff9896',
+  '#9467bd',
+  '#c5b0d5',
+  '#8c564b',
+  '#c49c94',
+  '#e377c2',
+  '#f7b6d2',
+  '#7f7f7f',
+  '#c7c7c7',
+  '#bcbd22',
+  '#dbdb8d',
+  '#17becf',
+  '#9edae5',
 ];
 
 const schemeCategory20 = [
-    0x8c564b,
-    0xc49c94,
-    0xe377c2,
-    0xf7b6d2,
-    0x7f7f7f,
-    0xc7c7c7,
-    0xbcbd22,
-    0xdbdb8d,
-    0x17becf,
-    0x9edae5,
-    0x1f77b4,
-    0xaec7e8,
-    0xff7f0e,
-    0xffbb78,
-    0x2ca02c,
-    0x98df8a,
-    0xd62728,
-    0xff9896,
-    0x9467bd,
-    0xc5b0d5,
+  0x8c564b,
+  0xc49c94,
+  0xe377c2,
+  0xf7b6d2,
+  0x7f7f7f,
+  0xc7c7c7,
+  0xbcbd22,
+  0xdbdb8d,
+  0x17becf,
+  0x9edae5,
+  0x1f77b4,
+  0xaec7e8,
+  0xff7f0e,
+  0xffbb78,
+  0x2ca02c,
+  0x98df8a,
+  0xd62728,
+  0xff9896,
+  0x9467bd,
+  0xc5b0d5,
 ];
 
 export function sanitizeColor(colors) {
-    colors = [].concat(colors || []);
+  colors = [].concat(colors || []);
 
-    let sanitized = colors.map(color => {
-        if (isNaN(color) && color[0] == '#') {
-            return parseInt('0x' + color.slice(1));
-        }
-        return color;
-    });
+  let sanitized = colors.map((color) => {
+    if (isNaN(color) && color[0] == '#') {
+      return parseInt('0x' + color.slice(1));
+    }
+    return color;
+  });
 
-    return sanitized;
+  return sanitized;
 }
 
 // reference:
 // https://gist.github.com/0x263b/2bdd90886c2036a1ad5bcf06d6e6fb37
 function str2Color(str) {
-    let colors = schemeCategory20;
+  let colors = schemeCategory20;
 
-    let hash = 0;
-    if (str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        hash = hash & hash;
-    }
-    hash = ((hash % colors.length) + colors.length) % colors.length;
-    return colors[hash];
+  let hash = 0;
+  if (str.length === 0) return hash;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash;
+  }
+  hash = ((hash % colors.length) + colors.length) % colors.length;
+  return colors[hash];
 }
 
 export function categoryColors(categories) {
-    let colorMatrix = [];
+  let colorMatrix = [];
 
-    categories.forEach((set, i) => {
-        let row = [];
-        set.forEach((cat, j) => {
-            let color = cat == 'undefined' || cat == null
-                ? 0x666666 : str2Color(cat);
-            row.push(color);
-        });
-        colorMatrix.push(row);
+  categories.forEach((set, i) => {
+    let row = [];
+    set.forEach((cat, j) => {
+      let color = cat == 'undefined' || cat == null ? 0x666666 : str2Color(cat);
+      row.push(color);
     });
+    colorMatrix.push(row);
+  });
 
-    return colorMatrix;
+  return colorMatrix;
 }
 
 export function hexToHexColor(hex) {
-    hex = hex.toString(16);
-    const len = hex.length;
-    return '#' + (len != 6 ? ('0'.repeat(6 - len) + hex) : hex);
+  hex = hex.toString(16);
+  const len = hex.length;
+  return '#' + (len != 6 ? '0'.repeat(6 - len) + hex : hex);
 }
 
 export function decToHex(c) {
-    var hex = c.toString(16);
-    if (hex === 0) return 0;
-    return hex.length == 1 ? '0' + hex : hex;
+  var hex = c.toString(16);
+  if (hex === 0) return 0;
+  return hex.length == 1 ? '0' + hex : hex;
 }
 
 export function rgbToHex(rgb) {
-    return '0x' + decToHex(rgb[0]) + decToHex(rgb[1]) + decToHex(rgb[2]);
+  return '0x' + decToHex(rgb[0]) + decToHex(rgb[1]) + decToHex(rgb[2]);
 }
 
 export function rgbToInteger(rgb) {
-    return rgb[0] * 65536 + rgb[1] * 256 + rgb[2];
+  return rgb[0] * 65536 + rgb[1] * 256 + rgb[2];
 }
 
 /*
@@ -145,86 +144,108 @@ export function rgbToInteger(rgb) {
  * @param {Object} scheme {bins: string, colors}
  */
 export function colorMatrix(matrix, colors, maxValue) {
-    let colorSize = colors.length;
-    let n = matrix[0].length,
-        m = matrix.length;
+  let colorSize = colors.length;
+  let maxIndex = colorSize - 1;
+  let n = matrix[0].length,
+    m = matrix.length;
 
-    let cMatrix = [];
-    for (let i = 0; i < m; i++) {
-        let row = [];
-        for (let j = 0; j < n; j++) {
-            let val = matrix[i][j];
-            const rate = Math.min(1, Math.max(0, val / maxValue));
-            const colorIndex = Math.max(0, Math.floor(rate * colorSize) - 1);
-            const lowerColor = colors[colorIndex];
-            const upperColor = colors[Math.min(colorIndex + 1, colorSize - 1)];
-            let color = rgbToInteger(pickHex(lowerColor, upperColor, rate));
-            if (color === null)
-                throw Error(
-                    `Could not map value ${val} to a color for (i,j)=(${i},${j})\n\n` +
-                    `The colors provided were parsed as:\n ${JSON.stringify(colors)}`
-                );
+  let cMatrix = [];
+  for (let i = 0; i < m; i++) {
+    let row = [];
+    for (let j = 0; j < n; j++) {
+      let val = matrix[i][j];
+      const rate = Math.min(1, Math.max(0, val / maxValue));
+      const color = pickRgbFromColorList(colors, maxIndex, rate);
 
-            row.push(color);
-        }
-        cMatrix.push(row);
+      if (color === null)
+        throw Error(
+          `Could not map value ${val} to a color for (i,j)=(${i},${j})\n\n` +
+            `The colors provided were parsed as:\n ${JSON.stringify(colors)}`
+        );
+
+      row.push(color);
     }
+    cMatrix.push(row);
+  }
 
-    return cMatrix;
+  return cMatrix;
+}
+
+function pickRgbFromColorList(colors, maxIndex, rate) {
+  if (maxIndex === 0) {
+    return rgbToInteger(colors[0]);
+  }
+  const colorIndex = Math.max(0, Math.floor(rate * (maxIndex)));
+  const lowerColor = colors[colorIndex];
+  const upperColor = colors[Math.min(colorIndex + 1, maxIndex)];
+
+  const segmentLength = 1 / maxIndex;
+  const segmentIndex = Math.floor(rate / segmentLength);
+
+  // 计算区间内的相对权重
+  const localWeight = (rate - segmentIndex * segmentLength) / segmentLength;
+  let hex = pickHex(lowerColor, upperColor, localWeight);
+  let color = rgbToInteger(hex);
+  return color;
 }
 
 export function parseColorBins(bins) {
-    let opRegex = /(>|<|=|<=|>=)+/gm;
-    let valRegex = /(-|\+)*\d+/gm;
-    bins = bins.map(binStr => {
-        return {
-            op: binStr.match(opRegex)[0],
-            val: binStr.match(valRegex)[0]
-        };
-    });
+  let opRegex = /(>|<|=|<=|>=)+/gm;
+  let valRegex = /(-|\+)*\d+/gm;
+  bins = bins.map((binStr) => {
+    return {
+      op: binStr.match(opRegex)[0],
+      val: binStr.match(valRegex)[0],
+    };
+  });
 
-    return bins;
+  return bins;
 }
 
 function binColorFunction(bins, colors) {
-    return (val) => {
-        let color = null;
-        for (let i = 0; i < bins.length; i++) {
-            let bin = bins[i],
-                v = parseFloat(bin.val);
+  return (val) => {
+    let color = null;
+    for (let i = 0; i < bins.length; i++) {
+      let bin = bins[i],
+        v = parseFloat(bin.val);
 
-            if (bin.op === '=' && val == v) {
-                color = colors[i];
-                break;
-            } else if (bin.op === '<=' && val <= v) {
-                color = colors[i];
-                break;
-            } else if (bin.op === '<' && val < v) {
-                color = colors[i];
-                break;
-            } else if (bin.op === '>' && val > v) {
-                color = colors[i];
-                break;
-            } else if (bin.op === '>=' && val >= v) {
-                color = colors[i];
-                break;
-            }
-        }
+      if (bin.op === '=' && val == v) {
+        color = colors[i];
+        break;
+      } else if (bin.op === '<=' && val <= v) {
+        color = colors[i];
+        break;
+      } else if (bin.op === '<' && val < v) {
+        color = colors[i];
+        break;
+      } else if (bin.op === '>' && val > v) {
+        color = colors[i];
+        break;
+      } else if (bin.op === '>=' && val >= v) {
+        color = colors[i];
+        break;
+      }
+    }
 
-        return color;
-    };
+    return color;
+  };
 }
 
-// see https://stackoverflow.com/a/30144587
+/**
+ *  see https://stackoverflow.com/a/30144587
+ *
+ * @param {*} color1 something like [R, G, B]
+ * @param {*} color2 something like [R, G, B]
+ * @param {*} weight [0~1]
+ * @returns
+ */
 function pickHex(color1, color2, weight) {
-    var w1 = weight;
-    var w2 = 1 - w1;
-    var rgb = [
-        Math.round(color1[0] * w1 + color2[0] * w2),
-        Math.round(color1[1] * w1 + color2[1] * w2),
-        Math.round(color1[2] * w1 + color2[2] * w2)
-    ];
-    return rgb;
+  var rgb = [
+    Math.round(color1[0] + (color2[0] - color1[0]) * weight),
+    Math.round(color1[1] + (color2[1] - color1[1]) * weight),
+    Math.round(color1[2] + (color2[2] - color1[2]) * weight),
+  ];
+  return rgb;
 }
 
 /**
@@ -234,36 +255,44 @@ function pickHex(color1, color2, weight) {
  * @param {*} rgb2 [r, g, b]
  * @param {*} colorFilter function that returns color to override default
  */
-function matGradient(matrix, rgb1, rgb2, colorFilter = null, rows, cols, maxValue) {
-    // const max = matMinMax(matrix).max,
-    //     m = matrix.length,
-    //     n = matrix[0].length;
-    const max = maxValue;
-    const m = rows.length,
-        n = cols.length;
+function matGradient(
+  matrix,
+  rgb1,
+  rgb2,
+  colorFilter = null,
+  rows,
+  cols,
+  maxValue
+) {
+  // const max = matMinMax(matrix).max,
+  //     m = matrix.length,
+  //     n = matrix[0].length;
+  const max = maxValue;
+  const m = rows.length,
+    n = cols.length;
 
-    const cMatrix = [];
-    for (let i = 0; i < m; i++) {
-        const row = [];
-        for (let j = 0; j < n; j++) {
-            const val = matrix[i][j];
+  const cMatrix = [];
+  for (let i = 0; i < m; i++) {
+    const row = [];
+    for (let j = 0; j < n; j++) {
+      const val = matrix[i][j];
 
-            let color = rgbToInteger(pickHex(rgb1, rgb2, val / max));
-            // let color = rgbToHex(pickHex(rgb1, rgb2, val / max));
+      let color = rgbToInteger(pickHex(rgb1, rgb2, val / max));
+      // let color = rgbToHex(pickHex(rgb1, rgb2, val / max));
 
-            // apply any color overrides
-            if (colorFilter) {
-                const rowID = rows[i].id;
-                const colID = cols[j].id;
-                const newColor = colorFilter({ val, color, i, j, rowID, colID });
-                color = typeof newColor !== 'undefined' ? newColor : color;
-            }
+      // apply any color overrides
+      if (colorFilter) {
+        const rowID = rows[i].id;
+        const colID = cols[j].id;
+        const newColor = colorFilter({ val, color, i, j, rowID, colID });
+        color = typeof newColor !== 'undefined' ? newColor : color;
+      }
 
-            row.push(color);
-        }
-
-        cMatrix.push(row);
+      row.push(color);
     }
 
-    return cMatrix;
+    cMatrix.push(row);
+  }
+
+  return cMatrix;
 }
