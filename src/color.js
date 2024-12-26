@@ -4,7 +4,7 @@
  * Authors: nconrad
  */
 
-import {matMinMax} from './utils';
+import { matMinMax } from './utils';
 
 const schemeCategory20RGBs = [
     'rgb(31, 119, 180)',
@@ -122,7 +122,7 @@ export function categoryColors(categories) {
 export function hexToHexColor(hex) {
     hex = hex.toString(16);
     const len = hex.length;
-    return '#' + ( len != 6 ? ('0'.repeat(6 - len) + hex) : hex );
+    return '#' + (len != 6 ? ('0'.repeat(6 - len) + hex) : hex);
 }
 
 export function decToHex(c) {
@@ -144,20 +144,8 @@ export function rgbToInteger(rgb) {
  * @param {[[]]} matrix matrix of values
  * @param {Object} scheme {bins: string, colors}
  */
-export function colorMatrix(matrix, scheme, colorFilter, rows, cols, maxValue) {
-    if (scheme == 'gradient') {
-        return matGradient(matrix, [0, 64, 128], [255, 255, 255], colorFilter, rows, cols, maxValue);
-    }
-
-    let {bins, colors} = scheme;
-
-    // parse bin list and create a function that returns colors
-    let binObjs = parseColorBins(bins);
-    let f = binColorFunction(binObjs, colors);
-
-    if (binObjs.length !== colors.length)
-        throw 'When specifying "bins", the number of bins and colors must be equal.';
-
+export function colorMatrix(matrix, colors, maxValue) {
+    let colorSize = colors.length;
     let n = matrix[0].length,
         m = matrix.length;
 
@@ -166,21 +154,16 @@ export function colorMatrix(matrix, scheme, colorFilter, rows, cols, maxValue) {
         let row = [];
         for (let j = 0; j < n; j++) {
             let val = matrix[i][j];
-            let color = f(val);
-
+            const rate = Math.min(1, Math.max(0, val / maxValue));
+            const colorIndex = Math.max(0, Math.floor(rate * colorSize) - 1);
+            const lowerColor = colors[colorIndex];
+            const upperColor = colors[Math.min(colorIndex + 1, colorSize - 1)];
+            let color = rgbToInteger(pickHex(lowerColor, upperColor, rate));
             if (color === null)
                 throw Error(
                     `Could not map value ${val} to a color for (i,j)=(${i},${j})\n\n` +
-                    `The bins provided were parsed as:\n ${JSON.stringify(binObjs)}`
+                    `The colors provided were parsed as:\n ${JSON.stringify(colors)}`
                 );
-
-            // apply any color overrides
-            if (colorFilter) {
-                const rowID = rows[i].id;
-                const colID = cols[j].id;
-                let newColor = colorFilter({val, color, i, j, rowID, colID});
-                color = typeof newColor !== 'undefined' ? newColor : color;
-            }
 
             row.push(color);
         }
@@ -272,7 +255,7 @@ function matGradient(matrix, rgb1, rgb2, colorFilter = null, rows, cols, maxValu
             if (colorFilter) {
                 const rowID = rows[i].id;
                 const colID = cols[j].id;
-                const newColor = colorFilter({val, color, i, j, rowID, colID});
+                const newColor = colorFilter({ val, color, i, j, rowID, colID });
                 color = typeof newColor !== 'undefined' ? newColor : color;
             }
 

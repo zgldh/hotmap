@@ -1,0 +1,189 @@
+<html>
+
+<head>
+  <link href="../dist/hotmap.css" rel="stylesheet">
+  <script src="../dist/hotmap.js"></script>
+
+  <style>
+    /* let's have the body act as container */
+    body {
+      margin: 0;
+    }
+
+    .chart-container {
+      position: absolute;
+      left: 50px;
+      top: 50px;
+      width: 800px;
+      height: 640px;
+    }
+
+    #chart {}
+
+    .hotmap {}
+
+    .hotmap .header {
+      display: none;
+    }
+
+    .hotmap .y-axis-hover-box {
+      display: none;
+    }
+
+    .hotmap .x-axis-hover-box {
+      display: none;
+    }
+
+    .hotmap .select-count {
+      display: none;
+    }
+
+    .hotmap .scale-ctrls {
+      display: none;
+    }
+  </style>
+
+  <title>Hotmap</title>
+</head>
+
+<body>
+  <!--<button class="update-btn">update chart</button>-->
+  <div class="chart-container">
+    <div id="chart"></div>
+  </div>
+  <script>
+    window.onload = function () {
+
+      let currentFps = 10;
+      let width = 256;
+      let height = 208;
+      let scale = 3;
+      var dataCache = []
+      let previousData = [];
+      var totalFrames = 100;
+      let valueMax = 100;
+      let neighborSize = 2;
+
+      console.log('Generating data...')
+      for (var i = 0; i < totalFrames; i++) {
+        dataCache.push(generateData())
+      }
+      console.log('All data generated.')
+
+      // Generate data points for the entire 208x256 grid
+      function generateData() {
+        const data = [];
+
+        for (let x = 0; x < height; x++) {
+          let rowData = [];
+          for (let y = 0; y < width; y++) {
+            let neighborSum = 0;
+            let neighborCount = 0;
+
+            // Check neighbors
+            for (let dx = -neighborSize; dx <= neighborSize; dx++) {
+              for (let dy = -neighborSize; dy <= neighborSize; dy++) {
+                if (dx === 0 && dy === 0) continue; // Skip current cell
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx >= 0 && nx < height && ny >= 0 && ny < width && previousData.hasOwnProperty(nx) && previousData[nx].hasOwnProperty(ny)) {
+                  neighborSum += previousData[nx][ny];
+                  neighborCount++;
+                }
+              }
+            }
+
+            let baseValue = neighborCount > 0 ? neighborSum / neighborCount : Math.random() * valueMax;
+            const value = Math.min(valueMax, Math.max(0, baseValue + (Math.random() - 0.5) * valueMax * 0.2)); // Adjust value with a smaller random factor
+            rowData.push(value);
+          }
+          data.push(rowData);
+        }
+        previousData = data; // Update previousData for the next frame
+        return data;
+      }
+
+      let ele = document.querySelector('#chart');
+
+      let rows = []
+      let cols = [];
+      for (let i = 0; i < height; i++) {
+        rows.push(
+          {
+            name: "Row " + i,
+            meta: []
+          },);
+      }
+      for (let i = 0; i < width; i++) {
+        cols.push(
+          {
+            name: "Col " + i,
+            meta: []
+          },);
+      }
+      window.hotmap = new Hotmap({
+        ele,
+        rows,
+        cols,
+        matrix: dataCache[0],
+        defaults: {
+          cellWidth: scale,
+          cellHeight: scale,
+          size: {
+            rows: rows.length,
+            columns: cols.length,
+            min: 0,
+            max: valueMax,
+          },
+          selection: {
+            stroke: 'rgb(252, 239, 203)',
+            fill: 'rgba(255, 166, 0, 0.6)',
+          }
+        },
+        color: [
+          [0, 0, 0],
+          [0, 0, 255],
+          [0, 255, 0],
+          [255, 255, 0],
+          [255, 0, 0],
+        ],
+        options: {
+          hideLegend: true,
+          hideOptions: true,
+        },
+        onHover: info => {
+          let cs = info.rowMeta;
+          return `<div><b>Value:</b> ${info.value}</div>`;
+        },
+        onSelection: selection => {
+          alert(`Selected ${selection.length} cell(s)\n\n` +
+            JSON.stringify(selection, null, 4).slice(0, 10000));
+        },
+      });
+      // var intervalHandleScaleCtrl = setInterval(() => {
+      //   if (hotmap.scaleCtrl) {
+      //     // hotmap.scaleCtrl.onLockClick();
+      //     clearInterval(intervalHandleScaleCtrl);
+      //   }
+      // }, 100);
+
+      var frame = 0;
+      var intervalHandle;
+      var init = +new Date;
+      // Animation function
+      function animate() {
+        intervalHandle && clearInterval(intervalHandle);
+        intervalHandle = setInterval(() => {
+          var matrix = dataCache[frame];
+          hotmap.updateMatrix(matrix);
+          // console.log('took ', (+new Date) - init, 'ms', 'frame', frame);
+          init = +new Date;
+          frame = (frame + 1) % dataCache.length;
+        }, 1000 / currentFps);
+      }
+      animate()
+    };
+  </script>
+</body>
+
+</html>

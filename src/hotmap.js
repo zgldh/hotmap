@@ -103,17 +103,22 @@ export default class Hotmap {
     this.size = this.getMatrixStats(this.matrix);
 
     // the current color scheme
-    this.color = params.color || 'gradient';
-    this._colorFilter = params.colorFilter;
+    this.color = params.color || [
+      [0, 0, 0],
+      [0, 0, 255],
+      [0, 255, 0],
+      [255, 255, 0],
+      [255, 0, 0]
+    ];
+
+    // the selection color scheme
+    this.selectionColor = this.defaults?.selection || {
+      stroke: 'rgb(252, 239, 203)',
+      fill: 'rgba(255, 166, 0, 0.6)'
+    };
 
     // stash original color settings if we need to revert
-    this.origColorSettings =
-      typeof this.color === 'object'
-        ? Object.assign(this.color, {
-            bins: this.color.bins,
-            colors: sanitizeColor(this.color.colors),
-          })
-        : this.color;
+    this.origColorSettings = this.color;
     this.useAltColorScheme = false;
 
     try {
@@ -121,9 +126,6 @@ export default class Hotmap {
       this.colorMatrix = colorMatrix(
         this.matrix,
         this.color,
-        this._colorFilter,
-        this.rows,
-        this.cols,
         this.size.max
       );
     } catch (error) {
@@ -290,7 +292,7 @@ export default class Hotmap {
     this.scaleCtrl = this.initScaleCtr();
 
     // setup search
-    this.initSearch();
+    // this.initSearch();
 
     // add scrollBox.  we'll update size of content area on each render
     // this.scrollBox = this.initScrollBox();
@@ -333,6 +335,8 @@ export default class Hotmap {
 
     // start tracking sorting
     this.sorter(this.svg);
+
+    this.updateMatrix(this.matrix);
   }
 
   static getRenderer(width, height) {
@@ -524,6 +528,9 @@ export default class Hotmap {
 
     // render!
     requestAnimationFrame(this.render);
+    if (this.onSelection) {
+      this.selectable();
+    }
     this.catLabelsAdded = true;
   }
 
@@ -1121,12 +1128,12 @@ export default class Hotmap {
 
     content = this.onHover
       ? this.onHover({
-          xLabel,
-          yLabel,
-          value,
-          ...(yMeta && { rowMeta: this.yMeta[i] }),
-          ...(xMeta && { colMeta: this.xMeta[j] }),
-        })
+        xLabel,
+        yLabel,
+        value,
+        ...(yMeta && { rowMeta: this.yMeta[i] }),
+        ...(xMeta && { colMeta: this.xMeta[j] }),
+      })
       : content;
 
     // place at bottom-right (if possible)
@@ -1235,9 +1242,6 @@ export default class Hotmap {
     this.colorMatrix = colorMatrix(
       this.matrix,
       this.color,
-      this._colorFilter,
-      this.rows,
-      this.cols,
       this.size.max
     );
   }
@@ -1274,9 +1278,6 @@ export default class Hotmap {
           this.colorMatrix = colorMatrix(
             this.matrix,
             this.color,
-            this._colorFilter,
-            this.rows,
-            this.cols,
             this.size.max
           );
           el.querySelector('.box').style.backgroundColor = hexToHexColor(hexD);
@@ -1301,9 +1302,6 @@ export default class Hotmap {
     this.colorMatrix = colorMatrix(
       this.matrix,
       this.color,
-      this._colorFilter,
-      this.rows,
-      this.cols,
       this.size.max
     );
 
@@ -1372,10 +1370,10 @@ export default class Hotmap {
         !this.yMeta || this.yMetaLabels.length == 0
           ? ''
           : this.yMeta[i]
-              .map(
-                (cat, i) => `<div><b>${this.yMetaLabels[i]}:</b> ${cat}</div>`
-              )
-              .join('');
+            .map(
+              (cat, i) => `<div><b>${this.yMetaLabels[i]}:</b> ${cat}</div>`
+            )
+            .join('');
 
       let text = `<div>${this.rows[rowIdx].name}</div>
                 ${cats.length ? '<br>' + cats : cats}`;
@@ -1482,7 +1480,7 @@ export default class Hotmap {
 
       dragBox.innerHTML =
         `<div class="x-drag-icon-container" style="left: ${this.cellW / 2 -
-          iconWidth / 2}px">` +
+        iconWidth / 2}px">` +
         icon.innerHTML +
         `</div>` +
         `<div class="x-drag-text" style="bottom: ${xTextPad}px; left: ${left}px; font-size: ${fontSize}px;">` +
@@ -1495,10 +1493,10 @@ export default class Hotmap {
         !this.xMeta || this.xMetaLabels.length == 0
           ? ''
           : this.xMeta[colIdx]
-              .map(
-                (cat, i) => `<div><b>${this.xMetaLabels[i]}:</b> ${cat}</div>`
-              )
-              .join('');
+            .map(
+              (cat, i) => `<div><b>${this.xMetaLabels[i]}:</b> ${cat}</div>`
+            )
+            .join('');
 
       let text = `<div>${this.cols[colIdx].name}</div>
                 ${cats.length ? '<br>' + cats : cats}`;
@@ -1771,8 +1769,8 @@ export default class Hotmap {
 
       let rect = svgRect(x, y, w, h, {
         class: 'select-box',
-        stroke: 'rgb(14, 135, 241)',
-        fill: 'rgba(14, 135, 241, .1)',
+        stroke: this.selectionColor.stroke || 'rgb(252, 239, 203)',
+        fill: this.selectionColor.fill || 'rgba(255, 166, 0, 0.6)',
       });
       this.svg.appendChild(rect);
     };
