@@ -109,22 +109,6 @@
 
       let ele = document.querySelector('#chart');
 
-      let rows = []
-      let cols = [];
-      for (let i = 0; i < height; i++) {
-        rows.push(
-          {
-            name: i,
-            meta: []
-          },);
-      }
-      for (let i = 0; i < width; i++) {
-        cols.push(
-          {
-            name: i,
-            meta: []
-          },);
-      }
       window.hotmap = new Hotmap({
         ele,
         matrix: dataCache[99],
@@ -132,8 +116,8 @@
           cellWidth: scale,
           cellHeight: scale,
           size: {
-            rows: rows.length,
-            columns: cols.length,
+            rows: height,
+            columns: width,
             min: 0,
             max: valueMax,
           },
