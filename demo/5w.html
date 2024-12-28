@@ -73,11 +73,11 @@
       // Generate data points with two expanding circles
       function generateData(iteration) {
         const data = [];
-        
+
         // Define two center points
-        const center1 = {x: height * 0.3, y: width * 0.3};
-        const center2 = {x: height * 0.7, y: width * 0.7};
-        
+        const center1 = { x: height * 0.3, y: width * 0.3 };
+        const center2 = { x: height * 0.7, y: width * 0.7 };
+
         // Calculate current radius and value based on iteration
         const maxRadius = 80;
         const minRadius = 20;
@@ -90,16 +90,16 @@
             // Calculate distance to both centers
             const dist1 = Math.sqrt(Math.pow(x - center1.x, 2) + Math.pow(y - center1.y, 2));
             const dist2 = Math.sqrt(Math.pow(x - center2.x, 2) + Math.pow(y - center2.y, 2));
-            
+
             // Calculate value based on distance to centers
             let cellValue = 0;
             if (dist1 <= radius) {
-              cellValue = Math.max(cellValue, value * (1 - dist1/radius));
+              cellValue = Math.max(cellValue, value * (1 - dist1 / radius));
             }
             if (dist2 <= radius) {
-              cellValue = Math.max(cellValue, value * (1 - dist2/radius));
+              cellValue = Math.max(cellValue, value * (1 - dist2 / radius));
             }
-            
+
             rowData.push(cellValue);
           }
           data.push(rowData);
@@ -114,21 +114,19 @@
       for (let i = 0; i < height; i++) {
         rows.push(
           {
-            name: "Row " + i,
+            name: i,
             meta: []
           },);
       }
       for (let i = 0; i < width; i++) {
         cols.push(
           {
-            name: "Col " + i,
+            name: i,
             meta: []
           },);
       }
       window.hotmap = new Hotmap({
         ele,
-        rows,
-        cols,
         matrix: dataCache[99],
         defaults: {
           cellWidth: scale,
@@ -156,8 +154,11 @@
           hideOptions: true,
         },
         onHover: info => {
-          let cs = info.rowMeta;
-          return `<div><b>Value:</b> ${info.value}</div>`;
+          // value = info.value. Keep 4 decimals
+          let value = parseFloat(info.value.toFixed(4));
+          return `<b>y:</b> ${info.rowIndex}<br>` +
+            `<b>x:</b> ${info.columnIndex}<br>` +
+            `<b>value:</b> ${value}`;
         },
         onSelection: selection => {
           alert(`Selected ${selection.length} cell(s)\n\n` +

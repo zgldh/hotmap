@@ -108,13 +108,13 @@ export default class Hotmap {
       [0, 0, 255],
       [0, 255, 0],
       [255, 255, 0],
-      [255, 0, 0]
+      [255, 0, 0],
     ];
 
     // the selection color scheme
     this.selectionColor = this.defaults?.selection || {
       stroke: 'rgb(252, 239, 203)',
-      fill: 'rgba(255, 166, 0, 0.6)'
+      fill: 'rgba(255, 166, 0, 0.6)',
     };
 
     // stash original color settings if we need to revert
@@ -123,11 +123,7 @@ export default class Hotmap {
 
     try {
       // convert matrix values into colors
-      this.colorMatrix = colorMatrix(
-        this.matrix,
-        this.color,
-        this.size.max
-      );
+      this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.max);
     } catch (error) {
       console.log(error);
       alert(error);
@@ -1057,33 +1053,33 @@ export default class Hotmap {
 
     if (x > xViewSize - 1 || y > yViewSize - 1) return;
 
-    // if there even is y axis labels and we're changing cells
-    if (this.yAxis.childNodes.length && y !== oldY) {
-      let label;
-      // old cell hover styling
-      if (oldY !== -1 && oldY < yViewSize) {
-        label = this.yAxis.querySelector(`.row-${oldY}`);
-        label.setAttribute('fill', labelColor);
-        label.setAttribute('font-weight', 'normal');
-      }
-      // new cell hover styling
-      label = this.yAxis.querySelector(`.row-${y}`);
-      label.setAttribute('fill', labelHoverColor);
-      label.setAttribute('font-weight', '500');
-    }
+    // // if there even is y axis labels and we're changing cells
+    // if (this.yAxis.childNodes.length && y !== oldY) {
+    //   let label;
+    //   // old cell hover styling
+    //   if (oldY !== -1 && oldY < yViewSize) {
+    //     label = this.yAxis.querySelector(`.row-${oldY}`);
+    //     label.setAttribute('fill', labelColor);
+    //     label.setAttribute('font-weight', 'normal');
+    //   }
+    //   // new cell hover styling
+    //   label = this.yAxis.querySelector(`.row-${y}`);
+    //   label.setAttribute('fill', labelHoverColor);
+    //   label.setAttribute('font-weight', '500');
+    // }
 
-    // if there even is x axis labels and we're changing cells
-    if (this.xAxis.childNodes.length && x !== oldX) {
-      let label;
-      if (oldX !== -1 && oldX < xViewSize) {
-        label = this.xAxis.querySelector(`[data-i="${oldX}"]`);
-        label.setAttribute('fill', labelColor);
-        label.setAttribute('font-weight', 'normal');
-      }
-      label = this.xAxis.querySelector(`[data-i="${x}"]`);
-      label.setAttribute('fill', labelHoverColor);
-      label.setAttribute('font-weight', '500');
-    }
+    // // if there even is x axis labels and we're changing cells
+    // if (this.xAxis.childNodes.length && x !== oldX) {
+    //   let label;
+    //   if (oldX !== -1 && oldX < xViewSize) {
+    //     label = this.xAxis.querySelector(`[data-i="${oldX}"]`);
+    //     label.setAttribute('fill', labelColor);
+    //     label.setAttribute('font-weight', 'normal');
+    //   }
+    //   label = this.xAxis.querySelector(`[data-i="${x}"]`);
+    //   label.setAttribute('fill', labelHoverColor);
+    //   label.setAttribute('font-weight', '500');
+    // }
 
     let i = this.yStart + y,
       j = this.xStart + x;
@@ -1110,7 +1106,7 @@ export default class Hotmap {
     this.hideHoverEffects();
   }
 
-  setHoverInfo(xLabel, yLabel, value, i, j, x, y) {
+  setHoverInfo(xLabel, yLabel, value, rowIndex, columnIndex, x, y) {
     let cellW = this.cellW,
       cellH = this.cellH;
 
@@ -1118,29 +1114,15 @@ export default class Hotmap {
     y = margin.top + y * cellH;
 
     // default content
-    let content =
-      `<b>row:</b> ${yLabel}<br>` +
-      `<b>column:</b> ${xLabel}<br>` +
-      `<b>value:</b> ${value}`;
-
-    let yMeta = this.yMeta,
-      xMeta = this.xMeta;
-
-    content = this.onHover
-      ? this.onHover({
-        xLabel,
-        yLabel,
-        value,
-        ...(yMeta && { rowMeta: this.yMeta[i] }),
-        ...(xMeta && { colMeta: this.xMeta[j] }),
-      })
-      : content;
+    let content = this.getHoverInfoContent(yLabel, xLabel, value, rowIndex, columnIndex);
 
     // place at bottom-right (if possible)
     let top = y,
       left = x;
 
-    this.tooltip(content, top, left, { w: cellW, h: cellH });
+    const tooltip = this.tooltip(content, top, left, { w: cellW, h: cellH });
+    tooltip.setAttribute('col', columnIndex);
+    tooltip.setAttribute('row', rowIndex);
 
     // add hover box
     if (x && y) {
@@ -1152,6 +1134,27 @@ export default class Hotmap {
         })
       );
     }
+  }
+
+  getHoverInfoContent(yLabel, xLabel, value, rowIndex, columnIndex) {
+    let content =
+      `<b>row:</b> ${rowIndex}<br>` +
+      `<b>column:</b> ${columnIndex}<br>` +
+      `<b>value:</b> ${value}`;
+
+    let yMeta = this.yMeta,
+      xMeta = this.xMeta;
+
+    content = this.onHover
+      ? this.onHover({
+          columnIndex,
+          rowIndex,
+          value,
+          ...(yMeta && { rowMeta: this.yMeta[rowIndex] }),
+          ...(xMeta && { colMeta: this.xMeta[columnIndex] }),
+        })
+      : content;
+    return content;
   }
 
   tooltip(content, top, left, offset = { w: 0, h: 0 }) {
@@ -1239,11 +1242,23 @@ export default class Hotmap {
     // }
 
     // update colors
-    this.colorMatrix = colorMatrix(
-      this.matrix,
-      this.color,
-      this.size.max
-    );
+    this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.max);
+
+    let tooltip = this.ele.querySelector('.hmap-tt');
+    if (tooltip.style.display === 'block') {
+      let toolTipCol = parseInt(tooltip.getAttribute('col'));
+      let toolTipRow = parseInt(tooltip.getAttribute('row'));
+      if (toolTipCol >= 0 && toolTipRow >= 0) {
+        let newValue = this.matrix[toolTipRow][toolTipCol];
+        tooltip.innerHTML = this.getHoverInfoContent(
+          null,
+          null,
+          newValue,
+          toolTipRow,
+          toolTipCol
+        );
+      }
+    }
   }
 
   updateLegend() {
@@ -1299,11 +1314,7 @@ export default class Hotmap {
       this.color = this.origColorSettings;
     }
 
-    this.colorMatrix = colorMatrix(
-      this.matrix,
-      this.color,
-      this.size.max
-    );
+    this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.max);
 
     // change legend
     this.updateLegend();
@@ -1370,10 +1381,10 @@ export default class Hotmap {
         !this.yMeta || this.yMetaLabels.length == 0
           ? ''
           : this.yMeta[i]
-            .map(
-              (cat, i) => `<div><b>${this.yMetaLabels[i]}:</b> ${cat}</div>`
-            )
-            .join('');
+              .map(
+                (cat, i) => `<div><b>${this.yMetaLabels[i]}:</b> ${cat}</div>`
+              )
+              .join('');
 
       let text = `<div>${this.rows[rowIdx].name}</div>
                 ${cats.length ? '<br>' + cats : cats}`;
@@ -1480,7 +1491,7 @@ export default class Hotmap {
 
       dragBox.innerHTML =
         `<div class="x-drag-icon-container" style="left: ${this.cellW / 2 -
-        iconWidth / 2}px">` +
+          iconWidth / 2}px">` +
         icon.innerHTML +
         `</div>` +
         `<div class="x-drag-text" style="bottom: ${xTextPad}px; left: ${left}px; font-size: ${fontSize}px;">` +
@@ -1493,10 +1504,10 @@ export default class Hotmap {
         !this.xMeta || this.xMetaLabels.length == 0
           ? ''
           : this.xMeta[colIdx]
-            .map(
-              (cat, i) => `<div><b>${this.xMetaLabels[i]}:</b> ${cat}</div>`
-            )
-            .join('');
+              .map(
+                (cat, i) => `<div><b>${this.xMetaLabels[i]}:</b> ${cat}</div>`
+              )
+              .join('');
 
       let text = `<div>${this.cols[colIdx].name}</div>
                 ${cats.length ? '<br>' + cats : cats}`;
