@@ -1121,8 +1121,8 @@ export default class Hotmap {
       left = x;
 
     const tooltip = this.tooltip(content, top, left, { w: cellW, h: cellH });
-    tooltip.setAttribute('col', columnIndex);
-    tooltip.setAttribute('row', rowIndex);
+    this.toolTipCol = columnIndex;
+    this.toolTipRow = rowIndex;
 
     // add hover box
     if (x && y) {
@@ -1246,16 +1246,14 @@ export default class Hotmap {
 
     let tooltip = this.ele.querySelector('.hmap-tt');
     if (tooltip.style.display === 'block') {
-      let toolTipCol = parseInt(tooltip.getAttribute('col'));
-      let toolTipRow = parseInt(tooltip.getAttribute('row'));
-      if (toolTipCol >= 0 && toolTipRow >= 0) {
-        let newValue = this.matrix[toolTipRow][toolTipCol];
+      if (this.toolTipCol >= 0 && this.toolTipRow >= 0) {
+        let newValue = this.matrix[this.toolTipRow][this.toolTipCol];
         tooltip.innerHTML = this.getHoverInfoContent(
           null,
           null,
           newValue,
-          toolTipRow,
-          toolTipCol
+          this.toolTipRow,
+          this.toolTipCol
         );
       }
     }
