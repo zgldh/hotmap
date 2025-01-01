@@ -1,24 +1,178 @@
-
-
 <html>
-  <head>
-    <link href="../dist/app.css" rel="stylesheet">
 
-    <script src="https://unpkg.com/vanilla-picker@2"></script>
-    <script src="../dist/app.js"></script>
+<head>
+  <link href="../dist/hotmap.css" rel="stylesheet">
+  <script src="../dist/hotmap.js"></script>
 
-    <style>
-      /* let's have the body act as container */
-      body { margin: 0; }
-    </style>
+  <style>
+    /* let's have the body act as container */
+    body {
+      margin: 0;
+    }
 
-    <title>Hotmap</title>
-  </head>
+    .chart-container {
+      position: absolute;
+      left: 50px;
+      top: 50px;
+      width: 800px;
+      height: 640px;
+    }
 
-  <body>
-    <!--<button class="update-btn">update chart</button>-->
+    #chart {}
+
+    .hotmap {}
+
+    .hotmap .header {
+      display: none;
+    }
+
+    .hotmap .y-axis-hover-box {
+      display: none;
+    }
+
+    .hotmap .x-axis-hover-box {
+      display: none;
+    }
+
+    .hotmap .select-count {
+      display: none;
+    }
+
+    .hotmap .scale-ctrls {
+      display: none;
+    }
+  </style>
+
+  <title>Hotmap</title>
+</head>
+
+<body>
+  <!--<button class="update-btn">update chart</button>-->
+  <div class="chart-container">
     <div id="chart"></div>
+  </div>
+  <script>
+    window.onload = function () {
 
-  </body>
+      let currentFps = 10;
+      let width = 256;
+      let height = 208;
+      let scale = 3;
+      var dataCache = []
+      let previousData = [];
+      var totalFrames = 100;
+      let valueMax = 100;
+      let neighborSize = 5;
+
+      console.log('Generating data...')
+      for (var i = 0; i < totalFrames; i++) {
+        dataCache.push(generateData(i))
+      }
+      console.log('All data generated.')
+
+      // Generate data points with two expanding circles
+      function generateData(iteration) {
+        const data = [];
+
+        // Define two center points
+        const center1 = { x: height * 0.3, y: width * 0.3 };
+        const center2 = { x: height * 0.7, y: width * 0.7 };
+
+        // Calculate current radius and value based on iteration
+        const maxRadius = 160;
+        const minRadius = 20;
+        const radius = Math.min(minRadius + iteration * 1.5, maxRadius);
+        const value = Math.min(iteration*1.5, 200);
+
+        for (let x = 0; x < height; x++) {
+          let rowData = [];
+          for (let y = 0; y < width; y++) {
+            // Calculate distance to both centers
+            const dist1 = Math.sqrt(Math.pow(x - center1.x, 2) + Math.pow(y - center1.y, 2));
+            const dist2 = Math.sqrt(Math.pow(x - center2.x, 2) + Math.pow(y - center2.y, 2));
+
+            // Calculate value based on distance to centers
+            let cellValue = 0;
+            if (dist1 <= radius) {
+              cellValue = Math.max(cellValue, value * (1 - dist1 / radius));
+            }
+            if (dist2 <= radius) {
+              cellValue = Math.max(cellValue, value * (1 - dist2 / radius));
+            }
+
+            rowData.push(cellValue);
+          }
+          data.push(rowData);
+        }
+        return data;
+      }
+
+      let ele = document.querySelector('#chart');
+
+      window.hotmap = new Hotmap({
+        ele,
+        matrix: dataCache[99],
+        defaults: {
+          cellWidth: scale,
+          cellHeight: scale,
+          size: {
+            rows: height,
+            columns: width,
+            min: 0,
+            max: valueMax,
+          },
+          selection: {
+            stroke: 'rgb(252, 239, 203)',
+            fill: 'rgba(255, 166, 0, 0.6)',
+          }
+        },
+        color: [
+          [0, 0, 0],
+          [0, 0, 255],
+          [0, 255, 0],
+          [255, 255, 0],
+          [255, 0, 0]
+        ],
+        options: {
+          hideLegend: true,
+          hideOptions: true,
+        },
+        onHover: info => {
+          // value = info.value. Keep 4 decimals
+          let value = parseFloat(info.value.toFixed(4));
+          return `<b>y:</b> ${info.rowIndex}<br>` +
+            `<b>x:</b> ${info.columnIndex}<br>` +
+            `<b>value:</b> ${value}`;
+        },
+        onSelection: selection => {
+          alert(`Selected ${selection.length} cell(s)\n\n` +
+            JSON.stringify(selection, null, 4).slice(0, 10000));
+        },
+      });
+      // var intervalHandleScaleCtrl = setInterval(() => {
+      //   if (hotmap.scaleCtrl) {
+      //     // hotmap.scaleCtrl.onLockClick();
+      //     clearInterval(intervalHandleScaleCtrl);
+      //   }
+      // }, 100);
+
+      var frame = 0;
+      var intervalHandle;
+      var init = +new Date;
+      // Animation function
+      function animate() {
+        intervalHandle && clearInterval(intervalHandle);
+        intervalHandle = setInterval(() => {
+          var matrix = dataCache[frame];
+          hotmap.updateMatrix(matrix);
+          console.log('took ', (+new Date) - init, 'ms', 'frame', frame);
+          init = +new Date;
+          frame = (frame + 1) % dataCache.length;
+        }, 1000 / currentFps);
+      }
+      animate()
+    };
+  </script>
+</body>
 
 </html>
