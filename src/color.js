@@ -170,27 +170,123 @@ export function colorMatrix(matrix, colors, maxValue) {
 
   return cMatrix;
 }
+function rgbToLab(r, g, b) {
+  // 将RGB值转换为XYZ值
+  function rgbToXyz(r, g, b) {
+    r = r / 255;
+    g = g / 255;
+    b = b / 255;
+
+    r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+    g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+    b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+
+    var x = r * 0.4124 + g * 0.3576 + b * 0.1805;
+    var y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+    var z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+
+    return [x, y, z];
+  }
+
+  // 将XYZ值转换为CIELab值
+  function xyzToLab(x, y, z) {
+    var refX = 95.047;
+    var refY = 100.0;
+    var refZ = 108.883;
+
+    x = x / refX;
+    y = y / refY;
+    z = z / refZ;
+
+    x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
+    y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
+    z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
+
+    var L = 116 * y - 16;
+    var a = 500 * (x - y);
+    var b = 200 * (y - z);
+
+    return [L, a, b];
+  }
+
+  var xyz = rgbToXyz(r, g, b);
+  return xyzToLab(xyz[0], xyz[1], xyz[2]);
+}
+
+function labToRgb(L, a, b) {
+  // 将CIELab值转换为XYZ值
+  function labToXyz(L, a, b) {
+    var refX = 95.047;
+    var refY = 100.0;
+    var refZ = 108.883;
+
+    var y = (L + 16) / 116;
+    var x = a / 500 + y;
+    var z = y - b / 200;
+
+    y = y > 0.206893 ? Math.pow(y, 3) : (y - 16 / 116) / 7.787;
+    x = x > 0.206893 ? Math.pow(x, 3) : (x - 16 / 116) / 7.787;
+    z = z > 0.206893 ? Math.pow(z, 3) : (z - 16 / 116) / 7.787;
+
+    x = x * refX;
+    y = y * refY;
+    z = z * refZ;
+
+    return [x, y, z];
+  }
+
+  // 将XYZ值转换为RGB值
+  function xyzToRgb(x, y, z) {
+    var r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+    var g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+    var b = x * 0.0557 + y * -0.204 + z * 1.057;
+
+    r = r > 0.0031308 ? 1.055 * Math.pow(r, 1 / 2.4) - 0.055 : 12.92 * r;
+    g = g > 0.0031308 ? 1.055 * Math.pow(g, 1 / 2.4) - 0.055 : 12.92 * g;
+    b = b > 0.0031308 ? 1.055 * Math.pow(b, 1 / 2.4) - 0.055 : 12.92 * b;
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+
+  var xyz = labToXyz(L, a, b);
+  return xyzToRgb(xyz[0], xyz[1], xyz[2]);
+}
+
+function colorGradient(rgb1, rgb2, t) {
+  // 将RGB颜色转换为CIELab颜色
+  var lab1 = rgbToLab(rgb1[0], rgb1[1], rgb1[2]);
+  var lab2 = rgbToLab(rgb2[0], rgb2[1], rgb2[2]);
+
+  // 计算CIELab颜色之间的渐变
+  var lab = [
+    lab1[0] + t * (lab2[0] - lab1[0]),
+    lab1[1] + t * (lab2[1] - lab1[1]),
+    lab1[2] + t * (lab2[2] - lab1[2]),
+  ];
+
+  // 将CIELab颜色转换回RGB颜色
+  var rgb = labToRgb(lab[0], lab[1], lab[2]);
+
+  return rgb;
+}
 
 function pickRgbFromColorList(colors, maxIndex, rate) {
   if (maxIndex === 0) {
     return rgbToInteger(colors[0]);
   }
 
-  // Apply gamma correction
-  const gamma = 2.2;
-  const gammaCorrectedRate = Math.pow(rate, 1 / gamma);
-
-  const colorIndex = Math.max(0, Math.floor(gammaCorrectedRate * (maxIndex)));
+  const colorIndex = Math.max(0, Math.floor(rate * maxIndex));
   const lowerColor = colors[colorIndex];
   const upperColor = colors[Math.min(colorIndex + 1, maxIndex)];
 
   const segmentLength = 1 / maxIndex;
-  const segmentIndex = Math.floor(gammaCorrectedRate / segmentLength);
+  const segmentIndex = Math.floor(rate / segmentLength);
 
   // 计算区间内的相对权重
-  const localWeight = (gammaCorrectedRate - segmentIndex * segmentLength) / segmentLength;
-  let hex = pickHex(lowerColor, upperColor, localWeight);
-  let color = rgbToInteger(hex);
+  const localWeight = (rate - segmentIndex * segmentLength) / segmentLength;
+
+  let rgb = colorGradient(lowerColor, upperColor, localWeight);
+  let color = rgbToInteger(rgb);
   return color;
 }
 
@@ -205,99 +301,4 @@ export function parseColorBins(bins) {
   });
 
   return bins;
-}
-
-function binColorFunction(bins, colors) {
-  return (val) => {
-    let color = null;
-    for (let i = 0; i < bins.length; i++) {
-      let bin = bins[i],
-        v = parseFloat(bin.val);
-
-      if (bin.op === '=' && val == v) {
-        color = colors[i];
-        break;
-      } else if (bin.op === '<=' && val <= v) {
-        color = colors[i];
-        break;
-      } else if (bin.op === '<' && val < v) {
-        color = colors[i];
-        break;
-      } else if (bin.op === '>' && val > v) {
-        color = colors[i];
-        break;
-      } else if (bin.op === '>=' && val >= v) {
-        color = colors[i];
-        break;
-      }
-    }
-
-    return color;
-  };
-}
-
-/**
- *  see https://stackoverflow.com/a/30144587
- *
- * @param {*} color1 something like [R, G, B]
- * @param {*} color2 something like [R, G, B]
- * @param {*} weight [0~1]
- * @returns
- */
-function pickHex(color1, color2, weight) {
-  var rgb = [
-    Math.round(color1[0] + (color2[0] - color1[0]) * weight),
-    Math.round(color1[1] + (color2[1] - color1[1]) * weight),
-    Math.round(color1[2] + (color2[2] - color1[2]) * weight),
-  ];
-  return rgb;
-}
-
-/**
- * Returns matrix of hex values given start and stop rgbs of gradient
- * @param {*} matrix matrix to compute
- * @param {*} rgb1 [r, g, b]
- * @param {*} rgb2 [r, g, b]
- * @param {*} colorFilter function that returns color to override default
- */
-function matGradient(
-  matrix,
-  rgb1,
-  rgb2,
-  colorFilter = null,
-  rows,
-  cols,
-  maxValue
-) {
-  // const max = matMinMax(matrix).max,
-  //     m = matrix.length,
-  //     n = matrix[0].length;
-  const max = maxValue;
-  const m = rows.length,
-    n = cols.length;
-
-  const cMatrix = [];
-  for (let i = 0; i < m; i++) {
-    const row = [];
-    for (let j = 0; j < n; j++) {
-      const val = matrix[i][j];
-
-      let color = rgbToInteger(pickHex(rgb1, rgb2, val / max));
-      // let color = rgbToHex(pickHex(rgb1, rgb2, val / max));
-
-      // apply any color overrides
-      if (colorFilter) {
-        const rowID = rows[i].id;
-        const colID = cols[j].id;
-        const newColor = colorFilter({ val, color, i, j, rowID, colID });
-        color = typeof newColor !== 'undefined' ? newColor : color;
-      }
-
-      row.push(color);
-    }
-
-    cMatrix.push(row);
-  }
-
-  return cMatrix;
 }
