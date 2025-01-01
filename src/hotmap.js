@@ -92,9 +92,9 @@ export default class Hotmap {
 
     this.matrix = params.matrix;
     this.rows =
-      params.rows || Hotmap.generateLabels('row', this.matrix[0].length);
+      params.rows || Hotmap.generateLabels('row', this.matrix.length);
     this.cols =
-      params.cols || Hotmap.generateLabels('column', this.matrix.length);
+      params.cols || Hotmap.generateLabels('column', this.matrix[0].length);
     this.newick = params.newick;
 
     this.defaults = params.defaults || {};
@@ -1053,42 +1053,14 @@ export default class Hotmap {
 
     if (x > xViewSize - 1 || y > yViewSize - 1) return;
 
-    // // if there even is y axis labels and we're changing cells
-    // if (this.yAxis.childNodes.length && y !== oldY) {
-    //   let label;
-    //   // old cell hover styling
-    //   if (oldY !== -1 && oldY < yViewSize) {
-    //     label = this.yAxis.querySelector(`.row-${oldY}`);
-    //     label.setAttribute('fill', labelColor);
-    //     label.setAttribute('font-weight', 'normal');
-    //   }
-    //   // new cell hover styling
-    //   label = this.yAxis.querySelector(`.row-${y}`);
-    //   label.setAttribute('fill', labelHoverColor);
-    //   label.setAttribute('font-weight', '500');
-    // }
+    let newY = this.yStart + y,
+      newX = this.xStart + x;
 
-    // // if there even is x axis labels and we're changing cells
-    // if (this.xAxis.childNodes.length && x !== oldX) {
-    //   let label;
-    //   if (oldX !== -1 && oldX < xViewSize) {
-    //     label = this.xAxis.querySelector(`[data-i="${oldX}"]`);
-    //     label.setAttribute('fill', labelColor);
-    //     label.setAttribute('font-weight', 'normal');
-    //   }
-    //   label = this.xAxis.querySelector(`[data-i="${x}"]`);
-    //   label.setAttribute('fill', labelHoverColor);
-    //   label.setAttribute('font-weight', '500');
-    // }
+    let value = this.matrix[newY][newX],
+      xLabel = this.cols[newX].name,
+      yLabel = this.rows[newY].name;
 
-    let i = this.yStart + y,
-      j = this.xStart + x;
-
-    let value = this.matrix[i][j],
-      xLabel = this.cols[j].name,
-      yLabel = this.rows[i].name;
-
-    this.setHoverInfo(xLabel, yLabel, value, i, j, x, y);
+    this.setHoverInfo(xLabel, yLabel, value, newY, newX, x, y);
   }
 
   onCellMouseOut() {
