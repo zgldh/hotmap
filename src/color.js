@@ -175,15 +175,20 @@ function pickRgbFromColorList(colors, maxIndex, rate) {
   if (maxIndex === 0) {
     return rgbToInteger(colors[0]);
   }
-  const colorIndex = Math.max(0, Math.floor(rate * (maxIndex)));
+
+  // Apply gamma correction
+  const gamma = 2.2;
+  const gammaCorrectedRate = Math.pow(rate, 1 / gamma);
+
+  const colorIndex = Math.max(0, Math.floor(gammaCorrectedRate * (maxIndex)));
   const lowerColor = colors[colorIndex];
   const upperColor = colors[Math.min(colorIndex + 1, maxIndex)];
 
   const segmentLength = 1 / maxIndex;
-  const segmentIndex = Math.floor(rate / segmentLength);
+  const segmentIndex = Math.floor(gammaCorrectedRate / segmentLength);
 
   // 计算区间内的相对权重
-  const localWeight = (rate - segmentIndex * segmentLength) / segmentLength;
+  const localWeight = (gammaCorrectedRate - segmentIndex * segmentLength) / segmentLength;
   let hex = pickHex(lowerColor, upperColor, localWeight);
   let color = rgbToInteger(hex);
   return color;
