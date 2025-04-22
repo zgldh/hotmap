@@ -1916,6 +1916,12 @@ export default class Hotmap {
     }
   }
 
+  updateMinMax(min, max) {
+    this.size.min = min;
+    this.size.max = max;
+    this.updateMatrix();
+  }
+
   /**
    * API methods
    */
