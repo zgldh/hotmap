@@ -6,7 +6,9 @@
     "module": "src/hotmap.js",
     "scripts": {
         "build": "NODE_ENV=production webpack -p",
+        "build:win": "SET NODE_ENV=production webpack -p",
         "build:dist": "NODE_ENV=production webpack -p --env.patch && npm run build-storybook",
+        "webpack": "webpack",
         "start": "webpack-dev-server --hot --inline",
         "start:server": "http-server -o",
         "lint": "node_modules/eslint/bin/eslint.js src/*.js demo/*.js",
