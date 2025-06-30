@@ -143,18 +143,21 @@ export function rgbToInteger(rgb) {
  * @param {[[]]} matrix matrix of values
  * @param {Object} scheme {bins: string, colors}
  */
-export function colorMatrix(matrix, colors, maxValue) {
+export function colorMatrix(matrix, colors, minValue, maxValue) {
   let colorSize = colors.length;
   let maxIndex = colorSize - 1;
   let n = matrix[0].length,
     m = matrix.length;
 
+  const range = maxValue - minValue;
   let cMatrix = [];
   for (let i = 0; i < m; i++) {
     let row = [];
     for (let j = 0; j < n; j++) {
       let val = matrix[i][j];
-      const rate = Math.min(1, Math.max(0, val / maxValue));
+      let rate =
+        range === 0 ? (val <= minValue ? 0 : 1) : (val - minValue) / range;
+      rate = Math.min(1, Math.max(0, rate));
       const color = pickRgbFromColorList(colors, maxIndex, rate);
 
       if (color === null)

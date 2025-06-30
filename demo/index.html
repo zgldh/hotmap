@@ -18,6 +18,28 @@
       height: 640px;
     }
 
+    .controls {
+      position: absolute;
+      top: 50px;
+      right: 50px;
+      background: #f0f0f0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .controls div {
+      display: flex;
+      flex-direction: column;
+    }
+    .controls textarea {
+      width: 200px;
+      font-family: monospace;
+    }
+
     #chart {}
 
     .hotmap {}
@@ -48,6 +70,27 @@
 
 <body>
   <!--<button class="update-btn">update chart</button>-->
+  <div class="controls">
+    <div>
+      <label for="min-val">Min Value:</label>
+      <input type="number" id="min-val" value="0">
+    </div>
+    <div>
+      <label for="max-val">Max Value:</label>
+      <input type="number" id="max-val">
+    </div>
+    <div>
+      <label for="colors">Colors (JSON array of [r,g,b]):</label>
+      <textarea id="colors" rows="8">[
+  [0, 0, 0],
+  [0, 0, 255],
+  [0, 255, 0],
+  [255, 255, 0],
+  [255, 0, 0]
+]</textarea>
+    </div>
+    <button id="update-btn">Update</button>
+  </div>
   <div class="chart-container">
     <div id="chart"></div>
   </div>
@@ -149,6 +192,27 @@
             JSON.stringify(selection, null, 4).slice(0, 10000));
         },
       });
+
+      document.getElementById('max-val').value = valueMax;
+
+      document.getElementById('update-btn').onclick = function() {
+        const min = parseFloat(document.getElementById('min-val').value);
+        const max = parseFloat(document.getElementById('max-val').value);
+        const colorsText = document.getElementById('colors').value;
+
+        hotmap.updateMinMax(min, max);
+
+        try {
+          const colors = JSON.parse(colorsText);
+          if (Array.isArray(colors)) {
+            hotmap.updateColor(colors);
+          } else {
+            alert('Colors must be a valid JSON array.');
+          }
+        } catch (e) {
+          alert('Invalid JSON in colors field: ' + e.message);
+        }
+      };
       // var intervalHandleScaleCtrl = setInterval(() => {
       //   if (hotmap.scaleCtrl) {
       //     // hotmap.scaleCtrl.onLockClick();

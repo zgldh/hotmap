@@ -123,7 +123,7 @@ export default class Hotmap {
 
     try {
       // convert matrix values into colors
-      this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.max);
+      this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.min, this.size.max);
     } catch (error) {
       console.log(error);
       alert(error);
@@ -1214,7 +1214,7 @@ export default class Hotmap {
     // }
 
     // update colors
-    this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.max);
+    this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.min, this.size.max);
 
     let tooltip = this.ele.querySelector('.hmap-tt');
     if (tooltip.style.display === 'block') {
@@ -1261,9 +1261,7 @@ export default class Hotmap {
           let hexD = parseInt(rgbToHex(color._rgba));
           this.color.colors[i] = hexD;
           this.colorMatrix = colorMatrix(
-            this.matrix,
-            this.color,
-            this.size.max
+            this.matrix, this.color, this.size.min, this.size.max
           );
           el.querySelector('.box').style.backgroundColor = hexToHexColor(hexD);
           this._draw();
@@ -1284,7 +1282,7 @@ export default class Hotmap {
       this.color = this.origColorSettings;
     }
 
-    this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.max);
+    this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.min, this.size.max);
 
     // change legend
     this.updateLegend();
@@ -1920,6 +1918,12 @@ export default class Hotmap {
     this.size.min = min;
     this.size.max = max;
     this.updateMatrix();
+  }
+
+  updateColor(color) {
+    this.color = color;
+    this.colorMatrix = colorMatrix(this.matrix, this.color, this.size.min, this.size.max);
+    this._draw(false, false, false);
   }
 
   /**
