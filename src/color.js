@@ -252,6 +252,9 @@ function labToRgb(L, a, b) {
   }
 
   var xyz = labToXyz(L, a, b);
+  if (!xyz || isNaN(xyz[0]) || isNaN(xyz[1]) || isNaN(xyz[2])) {
+    return [0, 0, 0]; // Return black for invalid colors
+  }
   return xyzToRgb(xyz[0], xyz[1], xyz[2]);
 }
 
